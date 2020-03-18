@@ -131,5 +131,12 @@ plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.)
 #Showing plots and adjusting them to the screen
 plt.subplots_adjust(top=0.95, bottom=0.15, left=0.06, right=0.90, hspace=0.6, wspace=0.5)
 
+
+
+
+
+
+
+
 plt.show()
 
