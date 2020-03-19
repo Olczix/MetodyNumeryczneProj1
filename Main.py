@@ -31,10 +31,10 @@ def SignalValue(probki,dzis):
 
 ileKasy = 1000 # nasz kapital
 ileEuro = 0  #ilosc euro w naszej kieszeni
-PLN = [None]*1000
-PLN[1]=1000.0
-EURO =[None]*1000
-EURO[1]=0.0
+PLN = [None]*1000 #wartosc kapitalu w PLN kazdego z 1000 dni
+PLN[1]=1000.0 # poczatkowy stan PLN
+EURO =[None]*1000 #wartosc kapitalu w Euro kazdego z 1000 dni
+EURO[1]=0.0 # poczatkowy stan euro
 
 # create Vectors to store information about Euro
 
@@ -70,10 +70,72 @@ for i in range(1000):
     signalValues[i]=SignalValue(macdValues,i+1)
 
 
+
+
+#------------------------------------------
+
+#Implementacja wlasnego algorytmu:
+print("\n\n")
 print("BEFORE: ")
-print("PLN: ",ileKasy," €:", ileEuro)
+print("PLN: ",ileKasy)
+print("\n\n")
+
+currentSum=0    #dotychczasowa suma - zmienna pomocnicza
+currentAvg=0    #aktualna srednia wartosc Euro na przestrzeni ostatnich x dni
 
 #detekcja miejsc kiedy kupic/sprzedac
+flag = 0
+# 0 - bedziemy kupowac euro
+# 1 - bedziemy sprzedawac euro
+
+for i in range(999): #dla kazdego dnia
+    currentSum += euroValues[i]             # w zlotowkach
+    currentAvg = currentSum/(i+1)           #srednia wartosc euro z danego okresu i dni
+    if(euroValues[i]>currentAvg and flag == 1): #sprzedaj
+        sprzedaj[i] = data[i]
+        ileKasy += ileEuro * euroValues[i + 1]
+        ileEuro = 0
+        flag = 0
+    elif(euroValues[i]<currentAvg and flag == 0): #kup
+        kup[i] = data[i]
+        ileEuro += ileKasy / euroValues[i + 1]
+        ileKasy = 0
+        flag = 1
+
+    EURO[i] = ileEuro
+    PLN[i] = ileKasy
+
+
+
+ileKasy += ileEuro * euroValues[999]        #zamiana posiadanych ewentualnie euro na PLN
+print("\n\n")
+print("AFTER: ")
+print("PLN: ",ileKasy)
+print("\n\n")
+
+#wyswietlenie dat kiedy kupic a kiedy sprzedac + info o kursie i stanie naszej kieszeni
+for i in range(1000):
+    if (kup[i] != None):
+        print("BUY: ", kup[i], " PLN: ", PLN[i], " €: ", EURO[i], " EuroValue: ", euroValues[i])
+    if (sprzedaj[i] != None):
+        print("SELL: ", sprzedaj[i], " PLN: ", PLN[i], " €: ", EURO[i], " EuroValue: ", euroValues[i])
+
+#-------------------------------------
+# Detekcja miejsc/dat kupna i sprzedazy korzystajac ze wskaznika MACD/Signal
+
+
+ileKasy = 1000 # nasz kapital
+ileEuro = 0  #ilosc euro w naszej kieszeni
+PLN = [None]*1000 #wartosc kapitalu w PLN kazdego z 1000 dni
+PLN[1]=1000.0 # poczatkowy stan PLN
+EURO =[None]*1000 #wartosc kapitalu w Euro kazdego z 1000 dni
+EURO[1]=0.0 # poczatkowy stan euro
+
+print("\n\n")
+print("BEFORE: ")
+print("PLN: ",ileKasy," €:", ileEuro)
+print("\n\n")
+
 for i in range(999): #dla kazdego dnia
     if (macdValues[i]<signalValues[i] and macdValues[i+1]>=signalValues[i+1] and ileKasy>0): #Macd przecina Signal z dolu - KUP EURO ZA POSIADANE PIENIADZE
         kup[i]=data[i]
@@ -90,11 +152,12 @@ for i in range(999): #dla kazdego dnia
     PLN[i]=ileKasy
 
 
+ileKasy += ileEuro * euroValues[999]
+ileEuro = 0
 print("AFTER: ")
 print("PLN: ",ileKasy," €:", ileEuro)
 
 
-print("\n\n")
 for i in range(1000):
     if(kup[i] != None):
         print("BUY: ", kup[i]," PLN: ",PLN[i]," €: ", EURO[i], " EuroValue: ",euroValues[i] )
@@ -113,12 +176,12 @@ plt.plot(data, euroValues, color='green')
 plt.xticks(rotation=60)
 plt.xlim(min(data),max(data))
 ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=None, bymonthday=1, interval=1, tz=None))
-plt.title('Kurs Euro')
+plt.title('EURO')
 plt.ylabel('Value of Euro')
 
 #Second plot - Macd+Signal - two lines + legend
 ax = fig.add_subplot(2,1,2)
-plt.title('Wskaznik MACD')
+plt.title('MACD/SIGNAL')
 plt.plot(data,macdValues,color='red',label='Macd')
 plt.plot(data,signalValues,color='b',label='Signal')
 plt.xticks(rotation=60)
@@ -130,12 +193,6 @@ plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0.)
 
 #Showing plots and adjusting them to the screen
 plt.subplots_adjust(top=0.95, bottom=0.15, left=0.06, right=0.90, hspace=0.6, wspace=0.5)
-
-
-
-
-
-
 
 
 plt.show()
